@@ -85,8 +85,10 @@ function getNeighbors(r, c, size) {
   return n;
 }
 
-function buildCages(solution, size, diffKey) {
+function buildCages(solution, size, diffKey, noRepeats) {
   const cfg = DIFF_MAP[diffKey] || DIFF_MAP.medium;
+  // When noRepeats is on, cap cage size to the board size (can't have more unique
+  // digits than values 1–size), but also cap at size to avoid impossible cages.
   const maxCage = Math.min(cfg.maxCage, size);
   const minCage = Math.min(cfg.minCage, maxCage);
   const assigned = Array.from({ length: size }, () => Array(size).fill(-1));
@@ -108,8 +110,15 @@ function buildCages(solution, size, diffKey) {
             .map(([nr, nc]) => nr * size + nc)
           ))].map(k => [Math.floor(k / size), k % size])
         : getNeighbors(sr, sc, size).filter(([r, c]) => assigned[r][c] === -1);
-      if (frontier.length === 0) break;
-      const [nr, nc] = frontier[Math.floor(Math.random() * frontier.length)];
+
+      // In no-repeats mode, only allow candidates whose value isn't already in this cage
+      const usedVals = noRepeats ? new Set(cage.map(([r, c]) => solution[r][c])) : null;
+      const valid = noRepeats
+        ? frontier.filter(([nr, nc]) => !usedVals.has(solution[nr][nc]))
+        : frontier;
+
+      if (valid.length === 0) break;
+      const [nr, nc] = valid[Math.floor(Math.random() * valid.length)];
       if (assigned[nr][nc] !== -1) continue;
       cage.push([nr, nc]);
       remaining.delete(nr * size + nc);
@@ -147,11 +156,28 @@ function validateBoard(grid, solution, size) {
   return true;
 }
 
-function getErrors(grid, solution, size) {
+function getErrors(grid, solution, size, cages, noRepeats) {
   const e = new Set();
+  // Wrong value vs solution
   for (let r = 0; r < size; r++)
     for (let c = 0; c < size; c++)
       if (grid[r][c] !== 0 && grid[r][c] !== solution[r][c]) e.add(r * size + c);
+  // Cage-internal duplicate violations
+  if (noRepeats && cages) {
+    for (const cage of cages) {
+      const seen = new Map();
+      for (const [r, c] of cage.cells) {
+        const v = grid[r][c];
+        if (v === 0) continue;
+        if (seen.has(v)) {
+          e.add(r * size + c);
+          e.add(seen.get(v));
+        } else {
+          seen.set(v, r * size + c);
+        }
+      }
+    }
+  }
   return e;
 }
 
@@ -177,6 +203,7 @@ export default function KillerSudoku() {
   const [noteMode, setNoteMode] = useState(false);
   const [notes, setNotes] = useState({});
   const [showSolution, setShowSolution] = useState(false);
+  const [noRepeats, setNoRepeats] = useState(false);
   const [timer, setTimer] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
   const timerRef = useRef(null);
@@ -193,7 +220,7 @@ export default function KillerSudoku() {
     `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
 
   // generate always receives sz and diff explicitly — no stale closure risk
-  const generate = useCallback((sz, diff) => {
+  const generate = useCallback((sz, diff, nr) => {
     const token = ++genTokenRef.current;
     setGenerating(true);
     setWon(false);
@@ -207,7 +234,7 @@ export default function KillerSudoku() {
     setTimeout(() => {
       if (genTokenRef.current !== token) return;
       const solution = generateSolution(sz);
-      const cages    = buildCages(solution, sz, diff);
+      const cages    = buildCages(solution, sz, diff, nr);
       const borders  = computeCageBorders(cages, sz);
       setPuzzle({ size: sz, solution, cages, borders, grid: makeEmptyGrid(sz) });
       setGenerating(false);
@@ -216,11 +243,11 @@ export default function KillerSudoku() {
   }, []);
 
   // On mount, generate with initial defaults
-  useEffect(() => { generate(9, "medium"); }, []); // eslint-disable-line
+  useEffect(() => { generate(9, "medium", false); }, []); // eslint-disable-line
 
   // Changing size or difficulty: update state AND generate immediately
-  const handleSizeChange = (s) => { setSize(s); generate(s, difficulty); };
-  const handleDiffChange = (d) => { setDifficulty(d); generate(size, d); };
+  const handleSizeChange = (s) => { setSize(s); generate(s, difficulty, noRepeats); };
+  const handleDiffChange = (d) => { setDifficulty(d); generate(size, d, noRepeats); };
 
   // Keyboard input
   useEffect(() => {
@@ -239,7 +266,7 @@ export default function KillerSudoku() {
         } else {
           const ng = grid.map(row => [...row]); ng[r][c] = n;
           setNotes(prev => { const p={...prev}; delete p[`${r},${c}`]; return p; });
-          setErrors(getErrors(ng, solution, psize));
+          setErrors(getErrors(ng, solution, psize, cages, noRepeats));
           setPuzzle(prev => ({ ...prev, grid: ng }));
           if (validateBoard(ng, solution, psize)) { setWon(true); setTimerActive(false); }
         }
@@ -247,7 +274,7 @@ export default function KillerSudoku() {
       if (e.key === "Backspace" || e.key === "Delete" || e.key === "0") {
         const ng = grid.map(row => [...row]); ng[r][c] = 0;
         setPuzzle(prev => ({ ...prev, grid: ng }));
-        setErrors(getErrors(ng, solution, psize));
+        setErrors(getErrors(ng, solution, psize, cages, noRepeats));
       }
       const mv = { ArrowUp:[-1,0], ArrowDown:[1,0], ArrowLeft:[0,-1], ArrowRight:[0,1] };
       if (mv[e.key]) {
@@ -273,7 +300,7 @@ export default function KillerSudoku() {
     } else {
       const ng = grid.map(row => [...row]); ng[r][c] = n;
       setNotes(prev => { const p={...prev}; delete p[`${r},${c}`]; return p; });
-      setErrors(getErrors(ng, solution, psize));
+      setErrors(getErrors(ng, solution, psize, cages, noRepeats));
       setPuzzle(prev => ({ ...prev, grid: ng }));
       if (n !== 0 && validateBoard(ng, solution, psize)) { setWon(true); setTimerActive(false); }
     }
@@ -363,7 +390,7 @@ export default function KillerSudoku() {
 
         {/* Generate + timer */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-          <button onClick={() => generate(size, difficulty)} disabled={generating} style={{
+          <button onClick={() => generate(size, difficulty, noRepeats)} disabled={generating} style={{
             padding: "8px 22px",
             background: generating ? "rgba(255,200,80,0.07)" : "rgba(255,200,80,0.16)",
             border: `1px solid ${generating ? "rgba(255,200,80,0.2)" : "rgba(255,200,80,0.5)"}`,
@@ -524,6 +551,9 @@ export default function KillerSudoku() {
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
           <ToolBtn active={noteMode} onClick={() => setNoteMode(m => !m)} color="#80c8ff">
             ✎ Notes {noteMode ? "ON" : "OFF"}
+          </ToolBtn>
+          <ToolBtn active={noRepeats} onClick={() => setNoRepeats(n => !n)} color="#ffb347">
+            ⊘ No Repeats {noRepeats ? "ON" : "OFF"}
           </ToolBtn>
           <ToolBtn active={showSolution} onClick={() => setShowSolution(s => !s)} color="#6dffb0">
             👁 Reveal
