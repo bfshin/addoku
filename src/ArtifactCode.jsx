@@ -77,7 +77,7 @@ const THEMES = {
     // Board
     boardBg: "rgba(16,14,10,0.98)",
     cellThin: "rgba(255,255,255,0.04)",
-    cellBold: "rgba(255,200,80,0.32)",
+    cellBold: "rgba(255,200,80,0.75)",
     cageDash: "rgba(255,200,80,0.48)",
     cellHighlight: "rgba(255,200,80,0.06)",
     cellSelected: "rgba(255,200,80,0.20)",
@@ -149,7 +149,7 @@ const THEMES = {
     accentBorder: "rgba(180,120,0,0.50)",
     boardBg: "#ffffff",
     cellThin: "rgba(0,0,0,0.07)",
-    cellBold: "rgba(100,70,0,0.35)",
+    cellBold: "rgba(80,50,0,0.70)",
     cageDash: "rgba(150,90,0,0.55)",
     cellHighlight: "rgba(180,120,0,0.06)",
     cellSelected: "rgba(180,120,0,0.16)",
@@ -214,7 +214,7 @@ const THEMES = {
     // Board: pure white with vivid rainbow cage fills
     boardBg: "#ffffff",
     cellThin: "rgba(0,0,0,0.06)",
-    cellBold: "rgba(80,40,140,0.30)",
+    cellBold: "rgba(60,20,120,0.65)",
     cageDash: "rgba(120,60,200,0.55)",
     cellHighlight: "rgba(180,100,220,0.08)",
     cellSelected: "rgba(200,50,180,0.16)",
@@ -621,6 +621,7 @@ export default function KillerSudoku() {
           background: T.boardBg, borderRadius: 10, overflow: "hidden",
           boxShadow: `0 8px 60px rgba(0,0,0,0.4), 0 0 0 2px ${diffCfg.color}44`,
           marginBottom: 16, transition: "background 0.3s",
+          position: "relative",
         }}>
           <div style={{
             display: "grid",
@@ -654,11 +655,20 @@ export default function KillerSudoku() {
                     display: "flex", alignItems: "center", justifyContent: "center",
                     cursor: "pointer", background: bg, transition: "background 0.1s",
                     boxSizing: "border-box",
-                    borderTop:    b.top    ? `2px dashed ${T.cageDash}` : (r%br===0&&r!==0) ? `2.5px solid ${T.cellBold}` : `1px solid ${T.cellThin}`,
-                    borderBottom: b.bottom ? `2px dashed ${T.cageDash}` : `1px solid ${T.cellThin}`,
-                    borderLeft:   b.left   ? `2px dashed ${T.cageDash}` : (c%bc===0&&c!==0) ? `2.5px solid ${T.cellBold}` : `1px solid ${T.cellThin}`,
-                    borderRight:  b.right  ? `2px dashed ${T.cageDash}` : `1px solid ${T.cellThin}`,
+                    border: `1px solid ${T.cellThin}`,
                   }}>
+                    {/* Cage dashes drawn as inset overlay — never overlap box lines */}
+                    {(b.top || b.bottom || b.left || b.right) && (
+                      <div style={{
+                        position: "absolute",
+                        inset: 0,
+                        pointerEvents: "none",
+                        borderTop:    b.top    ? `1.5px dashed ${T.cageDash}` : "none",
+                        borderBottom: b.bottom ? `1.5px dashed ${T.cageDash}` : "none",
+                        borderLeft:   b.left   ? `1.5px dashed ${T.cageDash}` : "none",
+                        borderRight:  b.right  ? `1.5px dashed ${T.cageDash}` : "none",
+                      }} />
+                    )}
                     {labelSum !== undefined && (
                       <span style={{
                         position: "absolute", top: 2, left: 3,
@@ -701,6 +711,30 @@ export default function KillerSudoku() {
               })
             )}
           </div>
+          {/* SVG overlay draws box boundary lines on top of everything */}
+          {(() => {
+            const totalW = psize * cellSize;
+            const totalH = psize * cellSize;
+            const lines = [];
+            // Vertical box lines
+            for (let col = bc; col < psize; col += bc) {
+              lines.push(<line key={`v${col}`}
+                x1={col * cellSize} y1={0} x2={col * cellSize} y2={totalH}
+                stroke={T.cellBold} strokeWidth="3" />);
+            }
+            // Horizontal box lines
+            for (let row = br; row < psize; row += br) {
+              lines.push(<line key={`h${row}`}
+                x1={0} y1={row * cellSize} x2={totalW} y2={row * cellSize}
+                stroke={T.cellBold} strokeWidth="3" />);
+            }
+            return (
+              <svg style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:3 }}
+                width={totalW} height={totalH}>
+                {lines}
+              </svg>
+            );
+          })()}
         </div>
       )}
 
