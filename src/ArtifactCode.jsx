@@ -494,8 +494,13 @@ export default function KillerSudoku() {
 
   const { size: psize, solution, cages, borders, grid } = puzzle;
   const ready = psize > 0 && psize === size && grid !== null && solution !== null && borders.length === psize;
-  const cellSize = size === 4 ? 80 : size === 6 ? 68 : 56;
-  const fontSize = size === 4 ? 28 : size === 6 ? 22 : 20;
+  // Fit board within viewport: 24px padding each side = 48px total horizontal padding
+  const maxBoardPx = typeof window !== "undefined" ? window.innerWidth - 48 : 500;
+  const maxCell = size === 4 ? 80 : size === 6 ? 68 : 56;
+  const cellSize = Math.floor(Math.min(maxCell, maxBoardPx / size));
+  const fontSize = cellSize >= 52 ? (size === 4 ? 28 : size === 6 ? 22 : 20)
+                 : cellSize >= 40 ? (size === 4 ? 24 : size === 6 ? 18 : 16)
+                 : 13;
   const { br, bc } = boxSize(size);
   const diffCfg = DIFF_MAP[difficulty];
 
