@@ -16,13 +16,11 @@ function shuffle(arr) {
 function makeEmptyGrid(size) {
   return Array.from({ length: size }, () => Array(size).fill(0));
 }
-
 function boxSize(size) {
   if (size === 4) return { br: 2, bc: 2 };
   if (size === 6) return { br: 2, bc: 3 };
   return { br: 3, bc: 3 };
 }
-
 function isValid(grid, r, c, val, size) {
   const { br, bc } = boxSize(size);
   for (let i = 0; i < size; i++)
@@ -33,7 +31,6 @@ function isValid(grid, r, c, val, size) {
       if (grid[i][j] === val) return false;
   return true;
 }
-
 function generateSolution(size) {
   const g = makeEmptyGrid(size);
   function bt(pos) {
@@ -41,17 +38,235 @@ function generateSolution(size) {
     const r = Math.floor(pos / size), c = pos % size;
     if (g[r][c] !== 0) return bt(pos + 1);
     for (const v of shuffle([...Array(size)].map((_, i) => i + 1))) {
-      if (isValid(g, r, c, v, size)) {
-        g[r][c] = v;
-        if (bt(pos + 1)) return true;
-        g[r][c] = 0;
-      }
+      if (isValid(g, r, c, v, size)) { g[r][c] = v; if (bt(pos + 1)) return true; g[r][c] = 0; }
     }
     return false;
   }
-  bt(0);
-  return g;
+  bt(0); return g;
 }
+
+// ─── THEMES ───────────────────────────────────────────────────────────────────
+//
+// Each theme provides all color tokens used throughout the UI.
+// cage[]  – 10 distinct cage background tints
+// Everything is consumed via a `theme` object passed/read from state.
+
+const THEMES = {
+  dark: {
+    key: "dark", label: "Dark", icon: "🌑",
+    // Page
+    pageBg: "#0f0e0c",
+    pageGrid: "rgba(255,200,80,0.03)",
+    pageText: "#f0e8d0",
+    // Panel
+    panelBg: "rgba(255,200,80,0.03)",
+    panelBorder: "rgba(255,200,80,0.10)",
+    // Header
+    titleColor: "#ffc840",
+    titleGlow: "rgba(255,200,64,0.45)",
+    subtitleColor: "#6a5a3a",
+    // Labels / muted text
+    labelColor: "#6a5a3a",
+    mutedText: "rgba(240,232,208,0.45)",
+    legendText: "#4a3e2a",
+    // Accent (used for active states, borders, highlights)
+    accent: "#ffc840",
+    accentFaint: "rgba(255,200,80,0.07)",
+    accentMid: "rgba(255,200,80,0.18)",
+    accentBorder: "rgba(255,200,80,0.50)",
+    // Board
+    boardBg: "rgba(16,14,10,0.98)",
+    cellThin: "rgba(255,255,255,0.04)",
+    cellBold: "rgba(255,200,80,0.32)",
+    cageDash: "rgba(255,200,80,0.48)",
+    cellHighlight: "rgba(255,200,80,0.06)",
+    cellSelected: "rgba(255,200,80,0.20)",
+    cellError: "rgba(255,70,70,0.14)",
+    // Cell text
+    cellTextNormal: "#f0e8d0",
+    cellTextError: "#ff5555",
+    cellTextSolution: "rgba(100,210,160,0.9)",
+    cellNotesColor: "rgba(255,200,80,0.50)",
+    // Cage labels
+    cageLabelColor: "rgba(255,200,80,0.85)",
+    cageLabelHidden: "rgba(255,110,70,0.9)",
+    // Numpad
+    numBg: "rgba(255,200,80,0.07)",
+    numBorder: "rgba(255,200,80,0.20)",
+    numColor: "#ffc840",
+    numHover: "rgba(255,200,80,0.18)",
+    delBg: "rgba(255,80,80,0.07)",
+    delBorder: "rgba(255,80,80,0.20)",
+    delColor: "#ff7070",
+    delHover: "rgba(255,80,80,0.18)",
+    // Timer / won
+    timerColor: "#ffc840",
+    wonColor: "#6dffb0",
+    wonBg: "rgba(109,255,176,0.12)",
+    wonBorder: "rgba(109,255,176,0.40)",
+    // Generate btn
+    genBg: "rgba(255,200,80,0.16)",
+    genColor: "#ffc840",
+    // Difficulty bar inactive pip
+    diffPipInactive: "rgba(255,255,255,0.07)",
+    diffBtnInactiveBg: "rgba(255,255,255,0.03)",
+    diffBtnInactiveBorder: "rgba(255,255,255,0.07)",
+    diffBtnInactiveColor: "#5a4e35",
+    // Tool button inactive
+    toolInactiveBorder: "rgba(255,255,255,0.07)",
+    toolInactiveColor: "#5a4e35",
+    // Size button
+    sizeBg: "rgba(255,200,80,0.18)",
+    sizeBorder: "rgba(255,200,80,0.55)",
+    sizeColor: "#ffc840",
+    sizeInactiveBorder: "rgba(255,200,80,0.12)",
+    sizeInactiveColor: "#5a4e35",
+    // Cage colors
+    cage: [
+      "rgba(255,180,50,0.11)",  "rgba(100,200,160,0.11)", "rgba(100,160,255,0.11)",
+      "rgba(220,100,180,0.11)", "rgba(255,120,100,0.11)", "rgba(160,120,255,0.11)",
+      "rgba(80,200,220,0.11)",  "rgba(255,200,80,0.11)",  "rgba(160,220,100,0.11)",
+      "rgba(200,140,100,0.11)",
+    ],
+  },
+
+  light: {
+    key: "light", label: "Light", icon: "☀️",
+    pageBg: "#f5f0e8",
+    pageGrid: "rgba(100,80,40,0.05)",
+    pageText: "#2a2018",
+    panelBg: "rgba(255,255,255,0.70)",
+    panelBorder: "rgba(180,140,60,0.20)",
+    titleColor: "#8a5c00",
+    titleGlow: "rgba(180,120,0,0.25)",
+    subtitleColor: "#b8965a",
+    labelColor: "#b8965a",
+    mutedText: "rgba(60,40,10,0.50)",
+    legendText: "#c0a070",
+    accent: "#b87800",
+    accentFaint: "rgba(180,120,0,0.07)",
+    accentMid: "rgba(180,120,0,0.14)",
+    accentBorder: "rgba(180,120,0,0.50)",
+    boardBg: "#ffffff",
+    cellThin: "rgba(0,0,0,0.07)",
+    cellBold: "rgba(100,70,0,0.35)",
+    cageDash: "rgba(150,90,0,0.55)",
+    cellHighlight: "rgba(180,120,0,0.06)",
+    cellSelected: "rgba(180,120,0,0.16)",
+    cellError: "rgba(220,60,60,0.12)",
+    cellTextNormal: "#1a1208",
+    cellTextError: "#cc2222",
+    cellTextSolution: "#1a7a4a",
+    cellNotesColor: "rgba(140,90,0,0.55)",
+    cageLabelColor: "rgba(140,90,0,0.90)",
+    cageLabelHidden: "rgba(200,80,30,0.90)",
+    numBg: "rgba(180,120,0,0.08)",
+    numBorder: "rgba(180,120,0,0.25)",
+    numColor: "#8a5c00",
+    numHover: "rgba(180,120,0,0.20)",
+    delBg: "rgba(200,60,60,0.08)",
+    delBorder: "rgba(200,60,60,0.25)",
+    delColor: "#cc3333",
+    delHover: "rgba(200,60,60,0.20)",
+    timerColor: "#8a5c00",
+    wonColor: "#1a7a4a",
+    wonBg: "rgba(26,122,74,0.10)",
+    wonBorder: "rgba(26,122,74,0.40)",
+    genBg: "rgba(180,120,0,0.14)",
+    genColor: "#8a5c00",
+    diffPipInactive: "rgba(0,0,0,0.10)",
+    diffBtnInactiveBg: "rgba(0,0,0,0.03)",
+    diffBtnInactiveBorder: "rgba(0,0,0,0.09)",
+    diffBtnInactiveColor: "#b8965a",
+    toolInactiveBorder: "rgba(0,0,0,0.10)",
+    toolInactiveColor: "#b8965a",
+    sizeBg: "rgba(180,120,0,0.14)",
+    sizeBorder: "rgba(180,120,0,0.50)",
+    sizeColor: "#8a5c00",
+    sizeInactiveBorder: "rgba(180,120,0,0.15)",
+    sizeInactiveColor: "#b8965a",
+    cage: [
+      "rgba(255,180,50,0.14)",  "rgba(60,180,120,0.12)",  "rgba(60,120,220,0.10)",
+      "rgba(200,80,160,0.10)",  "rgba(220,90,60,0.10)",   "rgba(130,80,220,0.10)",
+      "rgba(40,170,190,0.10)",  "rgba(220,170,40,0.12)",  "rgba(120,190,60,0.10)",
+      "rgba(180,110,60,0.12)",
+    ],
+  },
+
+  colorful: {
+    key: "colorful", label: "Colorful", icon: "🌈",
+    // Bright white base, rainbow accents throughout
+    pageBg: "#ffffff",
+    pageGrid: "rgba(100,100,220,0.05)",
+    pageText: "#1a1a2e",
+    panelBg: "rgba(255,255,255,0.90)",
+    panelBorder: "rgba(180,100,220,0.22)",
+    titleColor: "#cc2288",
+    titleGlow: "rgba(220,50,160,0.30)",
+    subtitleColor: "#8855cc",
+    labelColor: "#9966bb",
+    mutedText: "rgba(40,20,60,0.50)",
+    legendText: "#bb88cc",
+    accent: "#cc2288",
+    accentFaint: "rgba(200,50,180,0.07)",
+    accentMid: "rgba(200,50,180,0.14)",
+    accentBorder: "rgba(200,50,180,0.45)",
+    // Board: pure white with vivid rainbow cage fills
+    boardBg: "#ffffff",
+    cellThin: "rgba(0,0,0,0.06)",
+    cellBold: "rgba(80,40,140,0.30)",
+    cageDash: "rgba(120,60,200,0.55)",
+    cellHighlight: "rgba(180,100,220,0.08)",
+    cellSelected: "rgba(200,50,180,0.16)",
+    cellError: "rgba(230,40,60,0.13)",
+    cellTextNormal: "#1a1a2e",
+    cellTextError: "#dd1144",
+    cellTextSolution: "#117744",
+    cellNotesColor: "rgba(120,60,200,0.55)",
+    cageLabelColor: "rgba(80,40,160,0.90)",
+    cageLabelHidden: "rgba(220,60,20,0.90)",
+    numBg: "rgba(180,100,220,0.08)",
+    numBorder: "rgba(180,100,220,0.28)",
+    numColor: "#8833cc",
+    numHover: "rgba(180,100,220,0.20)",
+    delBg: "rgba(220,40,80,0.08)",
+    delBorder: "rgba(220,40,80,0.28)",
+    delColor: "#cc2244",
+    delHover: "rgba(220,40,80,0.20)",
+    timerColor: "#cc2288",
+    wonColor: "#117744",
+    wonBg: "rgba(17,119,68,0.10)",
+    wonBorder: "rgba(17,119,68,0.40)",
+    genBg: "rgba(200,50,180,0.12)",
+    genColor: "#cc2288",
+    diffPipInactive: "rgba(0,0,0,0.10)",
+    diffBtnInactiveBg: "rgba(0,0,0,0.03)",
+    diffBtnInactiveBorder: "rgba(0,0,0,0.10)",
+    diffBtnInactiveColor: "#9966bb",
+    toolInactiveBorder: "rgba(0,0,0,0.10)",
+    toolInactiveColor: "#9966bb",
+    sizeBg: "rgba(200,50,180,0.14)",
+    sizeBorder: "rgba(200,50,180,0.50)",
+    sizeColor: "#cc2288",
+    sizeInactiveBorder: "rgba(180,100,220,0.18)",
+    sizeInactiveColor: "#9966bb",
+    // Rainbow cage fills — vivid, saturated, light-background friendly
+    cage: [
+      "rgba(255,50,50,0.13)",   // red
+      "rgba(255,140,0,0.14)",   // orange
+      "rgba(255,210,0,0.16)",   // yellow
+      "rgba(60,200,80,0.14)",   // green
+      "rgba(0,180,220,0.14)",   // cyan
+      "rgba(50,100,255,0.13)",  // blue
+      "rgba(160,60,220,0.13)",  // violet
+      "rgba(230,60,160,0.13)",  // pink
+      "rgba(0,200,160,0.13)",   // teal
+      "rgba(200,120,40,0.13)",  // amber
+    ],
+  },
+};
+
+const THEME_KEYS = ["dark", "light", "colorful"];
 
 // ─── DIFFICULTY CONFIG ────────────────────────────────────────────────────────
 
@@ -64,7 +279,6 @@ const DIFFICULTIES = [
   { key: "diabolical", label: "Diabolical", color: "#c060ff", maxCage: 8, minCage: 3, hidden: 0.5,  snaking: true  },
 ];
 const DIFF_MAP = Object.fromEntries(DIFFICULTIES.map(d => [d.key, d]));
-
 const DIFF_DESCS = {
   easy:       { text: "Small 1–2 cell cages, all sums shown. Perfect for beginners.", tags: [] },
   medium:     { text: "Cages up to 3 cells. Classic Killer Sudoku.", tags: [] },
@@ -87,8 +301,6 @@ function getNeighbors(r, c, size) {
 
 function buildCages(solution, size, diffKey, noRepeats) {
   const cfg = DIFF_MAP[diffKey] || DIFF_MAP.medium;
-  // When noRepeats is on, cap cage size to the board size (can't have more unique
-  // digits than values 1–size), but also cap at size to avoid impossible cages.
   const maxCage = Math.min(cfg.maxCage, size);
   const minCage = Math.min(cfg.minCage, maxCage);
   const assigned = Array.from({ length: size }, () => Array(size).fill(-1));
@@ -110,13 +322,8 @@ function buildCages(solution, size, diffKey, noRepeats) {
             .map(([nr, nc]) => nr * size + nc)
           ))].map(k => [Math.floor(k / size), k % size])
         : getNeighbors(sr, sc, size).filter(([r, c]) => assigned[r][c] === -1);
-
-      // In no-repeats mode, only allow candidates whose value isn't already in this cage
       const usedVals = noRepeats ? new Set(cage.map(([r, c]) => solution[r][c])) : null;
-      const valid = noRepeats
-        ? frontier.filter(([nr, nc]) => !usedVals.has(solution[nr][nc]))
-        : frontier;
-
+      const valid = noRepeats ? frontier.filter(([nr, nc]) => !usedVals.has(solution[nr][nc])) : frontier;
       if (valid.length === 0) break;
       const [nr, nc] = valid[Math.floor(Math.random() * valid.length)];
       if (assigned[nr][nc] !== -1) continue;
@@ -158,41 +365,29 @@ function validateBoard(grid, solution, size) {
 
 function getErrors(grid, solution, size, cages, noRepeats) {
   const e = new Set();
-  // Wrong value vs solution
   for (let r = 0; r < size; r++)
     for (let c = 0; c < size; c++)
       if (grid[r][c] !== 0 && grid[r][c] !== solution[r][c]) e.add(r * size + c);
-  // Cage-internal duplicate violations
   if (noRepeats && cages) {
     for (const cage of cages) {
       const seen = new Map();
       for (const [r, c] of cage.cells) {
         const v = grid[r][c];
         if (v === 0) continue;
-        if (seen.has(v)) {
-          e.add(r * size + c);
-          e.add(seen.get(v));
-        } else {
-          seen.set(v, r * size + c);
-        }
+        if (seen.has(v)) { e.add(r * size + c); e.add(seen.get(v)); }
+        else seen.set(v, r * size + c);
       }
     }
   }
   return e;
 }
 
-const CAGE_COLORS = [
-  "rgba(255,180,50,0.11)",  "rgba(100,200,160,0.11)", "rgba(100,160,255,0.11)",
-  "rgba(220,100,180,0.11)", "rgba(255,120,100,0.11)", "rgba(160,120,255,0.11)",
-  "rgba(80,200,220,0.11)",  "rgba(255,200,80,0.11)",  "rgba(160,220,100,0.11)",
-  "rgba(200,140,100,0.11)",
-];
-
 const NULL_PUZZLE = { size: 0, solution: null, cages: [], borders: [], grid: null };
 
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 
 export default function KillerSudoku() {
+  const [themeKey, setThemeKey] = useState("dark");
   const [size, setSize] = useState(9);
   const [difficulty, setDifficulty] = useState("medium");
   const [puzzle, setPuzzle] = useState(NULL_PUZZLE);
@@ -209,6 +404,8 @@ export default function KillerSudoku() {
   const timerRef = useRef(null);
   const genTokenRef = useRef(0);
 
+  const T = THEMES[themeKey];
+
   useEffect(() => {
     if (timerActive && !won) {
       timerRef.current = setInterval(() => setTimer(t => t + 1), 1000);
@@ -219,37 +416,26 @@ export default function KillerSudoku() {
   const formatTime = s =>
     `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
 
-  // generate always receives sz and diff explicitly — no stale closure risk
   const generate = useCallback((sz, diff, nr) => {
     const token = ++genTokenRef.current;
-    setGenerating(true);
-    setWon(false);
-    setSelected(null);
-    setErrors(new Set());
-    setNotes({});
-    setShowSolution(false);
-    setTimer(0);
-    setTimerActive(false);
-    setPuzzle(NULL_PUZZLE);
+    setGenerating(true); setWon(false); setSelected(null);
+    setErrors(new Set()); setNotes({}); setShowSolution(false);
+    setTimer(0); setTimerActive(false); setPuzzle(NULL_PUZZLE);
     setTimeout(() => {
       if (genTokenRef.current !== token) return;
       const solution = generateSolution(sz);
       const cages    = buildCages(solution, sz, diff, nr);
       const borders  = computeCageBorders(cages, sz);
       setPuzzle({ size: sz, solution, cages, borders, grid: makeEmptyGrid(sz) });
-      setGenerating(false);
-      setTimerActive(true);
+      setGenerating(false); setTimerActive(true);
     }, 30);
   }, []);
 
-  // On mount, generate with initial defaults
   useEffect(() => { generate(9, "medium", false); }, []); // eslint-disable-line
 
-  // Changing size or difficulty: update state AND generate immediately
   const handleSizeChange = (s) => { setSize(s); generate(s, difficulty, noRepeats); };
   const handleDiffChange = (d) => { setDifficulty(d); generate(size, d, noRepeats); };
 
-  // Keyboard input
   useEffect(() => {
     const { size: psize, grid, solution } = puzzle;
     const handler = (e) => {
@@ -266,7 +452,7 @@ export default function KillerSudoku() {
         } else {
           const ng = grid.map(row => [...row]); ng[r][c] = n;
           setNotes(prev => { const p={...prev}; delete p[`${r},${c}`]; return p; });
-          setErrors(getErrors(ng, solution, psize, cages, noRepeats));
+          setErrors(getErrors(ng, solution, psize, puzzle.cages, noRepeats));
           setPuzzle(prev => ({ ...prev, grid: ng }));
           if (validateBoard(ng, solution, psize)) { setWon(true); setTimerActive(false); }
         }
@@ -274,7 +460,7 @@ export default function KillerSudoku() {
       if (e.key === "Backspace" || e.key === "Delete" || e.key === "0") {
         const ng = grid.map(row => [...row]); ng[r][c] = 0;
         setPuzzle(prev => ({ ...prev, grid: ng }));
-        setErrors(getErrors(ng, solution, psize, cages, noRepeats));
+        setErrors(getErrors(ng, solution, psize, puzzle.cages, noRepeats));
       }
       const mv = { ArrowUp:[-1,0], ArrowDown:[1,0], ArrowLeft:[0,-1], ArrowRight:[0,1] };
       if (mv[e.key]) {
@@ -285,10 +471,10 @@ export default function KillerSudoku() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [selected, puzzle, noteMode]);
+  }, [selected, puzzle, noteMode, noRepeats]);
 
   const handleNumPad = (n) => {
-    const { size: psize, grid, solution } = puzzle;
+    const { size: psize, grid, solution, cages } = puzzle;
     if (!selected || !grid || !solution) return;
     const [r, c] = selected;
     if (noteMode && n > 0) {
@@ -325,12 +511,12 @@ export default function KillerSudoku() {
 
   return (
     <div style={{
-      minHeight: "100vh", background: "#0f0e0c",
-      backgroundImage: `linear-gradient(rgba(255,200,80,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,200,80,0.03) 1px,transparent 1px)`,
+      minHeight: "100vh", background: T.pageBg,
+      backgroundImage: `linear-gradient(${T.pageGrid} 1px,transparent 1px),linear-gradient(90deg,${T.pageGrid} 1px,transparent 1px)`,
       backgroundSize: "28px 28px",
       display: "flex", flexDirection: "column", alignItems: "center",
-      fontFamily: "'DM Mono','Courier New',monospace", color: "#f0e8d0",
-      padding: "24px 12px 48px",
+      fontFamily: "'DM Mono','Courier New',monospace", color: T.pageText,
+      padding: "24px 12px 48px", transition: "background 0.3s, color 0.3s",
     }}>
 
       {/* Header */}
@@ -338,28 +524,29 @@ export default function KillerSudoku() {
         <div style={{
           fontFamily: "'Playfair Display',Georgia,serif",
           fontSize: "clamp(24px,5vw,40px)", fontWeight: 900,
-          letterSpacing: "0.06em", color: "#ffc840",
-          textShadow: "0 0 40px rgba(255,200,64,0.45)", marginBottom: 4,
+          letterSpacing: "0.06em", color: T.titleColor,
+          textShadow: `0 0 40px ${T.titleGlow}`, marginBottom: 4,
         }}>KILLER SUDOKU</div>
-        <div style={{ fontSize: 10, color: "#6a5a3a", letterSpacing: "0.3em", textTransform: "uppercase" }}>
+        <div style={{ fontSize: 10, color: T.subtitleColor, letterSpacing: "0.3em", textTransform: "uppercase" }}>
           additive cage puzzle
         </div>
       </div>
 
-      {/* Controls */}
+      {/* Controls panel */}
       <div style={{
         width: "100%", maxWidth: 580,
-        background: "rgba(255,200,80,0.03)", border: "1px solid rgba(255,200,80,0.1)",
+        background: T.panelBg, border: `1px solid ${T.panelBorder}`,
         borderRadius: 14, padding: "16px 18px", marginBottom: 20,
         display: "flex", flexDirection: "column", gap: 12,
+        transition: "background 0.3s, border-color 0.3s",
       }}>
 
         {/* Board size */}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Label>BOARD</Label>
+          <Label T={T}>BOARD</Label>
           <div style={{ display: "flex", gap: 6 }}>
             {[4, 6, 9].map(s => (
-              <SizeBtn key={s} active={size === s} disabled={generating}
+              <SizeBtn key={s} active={size === s} disabled={generating} T={T}
                 onClick={() => handleSizeChange(s)}>
                 {s}×{s}
               </SizeBtn>
@@ -367,17 +554,12 @@ export default function KillerSudoku() {
           </div>
         </div>
 
-        {/* Difficulty — label above full-width 3x2 grid */}
+        {/* Difficulty */}
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <Label>LEVEL</Label>
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: 6,
-            width: "100%",
-          }}>
+          <Label T={T}>LEVEL</Label>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, width: "100%" }}>
             {DIFFICULTIES.map(d => (
-              <DiffBtn key={d.key} cfg={d} active={difficulty === d.key} disabled={generating}
+              <DiffBtn key={d.key} cfg={d} active={difficulty === d.key} disabled={generating} T={T}
                 onClick={() => handleDiffChange(d.key)}>
                 {d.label}
               </DiffBtn>
@@ -386,15 +568,15 @@ export default function KillerSudoku() {
         </div>
 
         {/* Difficulty info bar */}
-        <DifficultyBar diffKey={difficulty} />
+        <DifficultyBar diffKey={difficulty} T={T} />
 
         {/* Generate + timer */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
           <button onClick={() => generate(size, difficulty, noRepeats)} disabled={generating} style={{
             padding: "8px 22px",
-            background: generating ? "rgba(255,200,80,0.07)" : "rgba(255,200,80,0.16)",
-            border: `1px solid ${generating ? "rgba(255,200,80,0.2)" : "rgba(255,200,80,0.5)"}`,
-            borderRadius: 8, color: generating ? "rgba(255,200,80,0.4)" : "#ffc840",
+            background: generating ? T.accentFaint : T.genBg,
+            border: `1px solid ${generating ? T.panelBorder : T.accentBorder}`,
+            borderRadius: 8, color: generating ? T.labelColor : T.genColor,
             fontFamily: "inherit", fontSize: 12, fontWeight: 700,
             letterSpacing: "0.12em", cursor: generating ? "not-allowed" : "pointer",
             transition: "all 0.2s", textTransform: "uppercase",
@@ -403,14 +585,14 @@ export default function KillerSudoku() {
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{
-              fontSize: 20, fontWeight: 700, color: won ? "#6dffb0" : "#ffc840",
+              fontSize: 20, fontWeight: 700, color: won ? T.wonColor : T.timerColor,
               fontVariantNumeric: "tabular-nums", minWidth: 54, textAlign: "right",
             }}>{formatTime(timer)}</div>
             {won && (
               <div style={{
-                padding: "4px 12px", background: "rgba(109,255,176,0.12)",
-                border: "1px solid rgba(109,255,176,0.4)", borderRadius: 20,
-                color: "#6dffb0", fontSize: 12, fontWeight: 700, letterSpacing: "0.1em",
+                padding: "4px 12px", background: T.wonBg, border: `1px solid ${T.wonBorder}`,
+                borderRadius: 20, color: T.wonColor,
+                fontSize: 12, fontWeight: 700, letterSpacing: "0.1em",
                 animation: "pulse 1.2s ease infinite",
               }}>✓ SOLVED</div>
             )}
@@ -423,17 +605,17 @@ export default function KillerSudoku() {
         <div style={{
           width: size * cellSize, height: size * cellSize,
           display: "flex", alignItems: "center", justifyContent: "center",
-          color: "rgba(255,200,80,0.25)", fontSize: 12, letterSpacing: "0.2em",
-          border: "1px dashed rgba(255,200,80,0.08)", borderRadius: 10, marginBottom: 18,
+          color: T.labelColor, fontSize: 12, letterSpacing: "0.2em",
+          border: `1px dashed ${T.panelBorder}`, borderRadius: 10, marginBottom: 18,
         }}>GENERATING…</div>
       )}
 
       {/* Board */}
       {!generating && ready && (
         <div style={{
-          background: "rgba(16,14,10,0.98)", borderRadius: 10, overflow: "hidden",
-          boxShadow: `0 8px 60px rgba(0,0,0,0.7), 0 0 0 2px ${diffCfg.color}33`,
-          marginBottom: 16,
+          background: T.boardBg, borderRadius: 10, overflow: "hidden",
+          boxShadow: `0 8px 60px rgba(0,0,0,0.4), 0 0 0 2px ${diffCfg.color}44`,
+          marginBottom: 16, transition: "background 0.3s",
         }}>
           <div style={{
             display: "grid",
@@ -444,7 +626,7 @@ export default function KillerSudoku() {
               Array.from({ length: psize }, (_, c) => {
                 const isSelected = selected?.[0] === r && selected?.[1] === c;
                 const cageIdx = cellCageMap[`${r},${c}`] ?? 0;
-                const cageColor = CAGE_COLORS[cageIdx % CAGE_COLORS.length];
+                const cageColor = T.cage[cageIdx % T.cage.length];
                 const b = borders[r][c];
                 const hasError = errors.has(r * psize + c);
                 const labelSum = labelCells.get(`${r},${c}`);
@@ -452,18 +634,14 @@ export default function KillerSudoku() {
                 const cellNotes = notes[`${r},${c}`] || [];
 
                 let bg = cageColor;
-                if (isSelected) bg = "rgba(255,200,80,0.2)";
-                else if (hasError) bg = "rgba(255,70,70,0.14)";
+                if (isSelected) bg = T.cellSelected;
+                else if (hasError) bg = T.cellError;
                 else if (selected) {
                   const [sr, sc] = selected;
                   const { br: br2, bc: bc2 } = boxSize(psize);
                   if (r===sr || c===sc || (Math.floor(r/br2)===Math.floor(sr/br2) && Math.floor(c/bc2)===Math.floor(sc/bc2)))
-                    bg = "rgba(255,200,80,0.06)";
+                    bg = T.cellHighlight;
                 }
-
-                const dash = `2px dashed rgba(255,200,80,0.48)`;
-                const thin = `1px solid rgba(255,255,255,0.04)`;
-                const bold = `2.5px solid rgba(255,200,80,0.32)`;
 
                 return (
                   <div key={`${r}-${c}`} onClick={() => setSelected([r, c])} style={{
@@ -471,16 +649,16 @@ export default function KillerSudoku() {
                     display: "flex", alignItems: "center", justifyContent: "center",
                     cursor: "pointer", background: bg, transition: "background 0.1s",
                     boxSizing: "border-box",
-                    borderTop:    b.top    ? dash : (r%br===0&&r!==0) ? bold : thin,
-                    borderBottom: b.bottom ? dash : thin,
-                    borderLeft:   b.left   ? dash : (c%bc===0&&c!==0) ? bold : thin,
-                    borderRight:  b.right  ? dash : thin,
+                    borderTop:    b.top    ? `2px dashed ${T.cageDash}` : (r%br===0&&r!==0) ? `2.5px solid ${T.cellBold}` : `1px solid ${T.cellThin}`,
+                    borderBottom: b.bottom ? `2px dashed ${T.cageDash}` : `1px solid ${T.cellThin}`,
+                    borderLeft:   b.left   ? `2px dashed ${T.cageDash}` : (c%bc===0&&c!==0) ? `2.5px solid ${T.cellBold}` : `1px solid ${T.cellThin}`,
+                    borderRight:  b.right  ? `2px dashed ${T.cageDash}` : `1px solid ${T.cellThin}`,
                   }}>
                     {labelSum !== undefined && (
                       <span style={{
                         position: "absolute", top: 2, left: 3,
                         fontSize: Math.max(8, cellSize * 0.17), fontWeight: 700, lineHeight: 1,
-                        color: labelSum.hidden ? "rgba(255,110,70,0.9)" : "rgba(255,200,80,0.85)",
+                        color: labelSum.hidden ? T.cageLabelHidden : T.cageLabelColor,
                         pointerEvents: "none", zIndex: 2,
                       }}>{labelSum.hidden ? "?" : labelSum.sum}</span>
                     )}
@@ -488,7 +666,7 @@ export default function KillerSudoku() {
                       <span style={{
                         fontSize, fontWeight: 700, lineHeight: 1, userSelect: "none",
                         fontFamily: "'Playfair Display',Georgia,serif",
-                        color: hasError ? "#ff5555" : showSolution ? "rgba(100,210,160,0.9)" : "#f0e8d0",
+                        color: hasError ? T.cellTextError : showSolution ? T.cellTextSolution : T.cellTextNormal,
                       }}>{val}</span>
                     )}
                     {val === 0 && cellNotes.length > 0 && (
@@ -496,7 +674,7 @@ export default function KillerSudoku() {
                         display: "grid",
                         gridTemplateColumns: `repeat(${Math.ceil(Math.sqrt(psize))}, 1fr)`,
                         padding: 3, fontSize: Math.max(6, cellSize * 0.13),
-                        color: "rgba(255,200,80,0.5)",
+                        color: T.cellNotesColor,
                         width: "100%", height: "100%",
                         alignContent: "center", justifyItems: "center",
                       }}>
@@ -508,8 +686,8 @@ export default function KillerSudoku() {
                     {isSelected && (
                       <div style={{
                         position: "absolute", inset: 0,
-                        border: `2px solid ${diffCfg.color}bb`,
-                        boxShadow: `inset 0 0 10px ${diffCfg.color}18`,
+                        border: `2px solid ${diffCfg.color}cc`,
+                        boxShadow: `inset 0 0 10px ${diffCfg.color}22`,
                         pointerEvents: "none",
                       }} />
                     )}
@@ -526,22 +704,22 @@ export default function KillerSudoku() {
         <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap", justifyContent: "center" }}>
           {Array.from({ length: psize }, (_, i) => i + 1).map(n => (
             <button key={n} onClick={() => handleNumPad(n)} style={{
-              width: 42, height: 42,
-              background: "rgba(255,200,80,0.07)", border: "1px solid rgba(255,200,80,0.2)",
-              borderRadius: 8, color: "#ffc840",
+              width: 42, height: 42, background: T.numBg,
+              border: `1px solid ${T.numBorder}`, borderRadius: 8, color: T.numColor,
               fontFamily: "'Playfair Display',Georgia,serif", fontSize: 19, fontWeight: 700, cursor: "pointer",
+              transition: "background 0.15s",
             }}
-              onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,200,80,0.18)")}
-              onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,200,80,0.07)")}
+              onMouseEnter={e => (e.currentTarget.style.background = T.numHover)}
+              onMouseLeave={e => (e.currentTarget.style.background = T.numBg)}
             >{n}</button>
           ))}
           <button onClick={() => handleNumPad(0)} style={{
-            width: 42, height: 42,
-            background: "rgba(255,80,80,0.07)", border: "1px solid rgba(255,80,80,0.2)",
-            borderRadius: 8, color: "#ff7070", fontSize: 15, cursor: "pointer",
+            width: 42, height: 42, background: T.delBg,
+            border: `1px solid ${T.delBorder}`, borderRadius: 8,
+            color: T.delColor, fontSize: 15, cursor: "pointer", transition: "background 0.15s",
           }}
-            onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,80,80,0.18)")}
-            onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,80,80,0.07)")}
+            onMouseEnter={e => (e.currentTarget.style.background = T.delHover)}
+            onMouseLeave={e => (e.currentTarget.style.background = T.delBg)}
           >✕</button>
         </div>
       )}
@@ -549,21 +727,45 @@ export default function KillerSudoku() {
       {/* Tools */}
       {!generating && ready && (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
-          <ToolBtn active={noteMode} onClick={() => setNoteMode(m => !m)} color="#80c8ff">
+          <ToolBtn active={noteMode} onClick={() => setNoteMode(m => !m)} color="#80c8ff" T={T}>
             ✎ Notes {noteMode ? "ON" : "OFF"}
           </ToolBtn>
-          <ToolBtn active={noRepeats} onClick={() => setNoRepeats(n => !n)} color="#ffb347">
+          <ToolBtn active={noRepeats} onClick={() => setNoRepeats(n => !n)} color="#ffb347" T={T}>
             ⊘ No Repeats {noRepeats ? "ON" : "OFF"}
           </ToolBtn>
-          <ToolBtn active={showSolution} onClick={() => setShowSolution(s => !s)} color="#6dffb0">
+          <ToolBtn active={showSolution} onClick={() => setShowSolution(s => !s)} color="#6dffb0" T={T}>
             👁 Reveal
           </ToolBtn>
         </div>
       )}
 
+      {/* Theme switcher */}
+      <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 16 }}>
+        <span style={{ fontSize: 10, color: T.legendText, letterSpacing: "0.2em" }}>THEME</span>
+        {THEME_KEYS.map(tk => {
+          const th = THEMES[tk];
+          const active = themeKey === tk;
+          return (
+            <button key={tk} onClick={() => setThemeKey(tk)} title={th.label} style={{
+              padding: "5px 12px", borderRadius: 20, fontSize: 13,
+              background: active ? T.accentMid : "transparent",
+              border: active ? `1px solid ${T.accentBorder}` : `1px solid ${T.panelBorder}`,
+              cursor: "pointer", display: "flex", alignItems: "center", gap: 5,
+              color: active ? T.accent : T.legendText,
+              fontFamily: "'DM Mono',monospace", fontSize: 11,
+              fontWeight: active ? 700 : 400,
+              transition: "all 0.15s",
+            }}>
+              <span style={{ fontSize: 14 }}>{th.icon}</span>
+              {th.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Legend */}
-      <div style={{ marginTop: 28, fontSize: 10, color: "#4a3e2a", textAlign: "center", lineHeight: 2, letterSpacing: "0.04em" }}>
-        <div>Dashed border = cage boundary · corner digit = cage sum · <span style={{ color: "rgba(255,110,70,0.55)" }}>?</span> = hidden sum</div>
+      <div style={{ marginTop: 16, fontSize: 10, color: T.legendText, textAlign: "center", lineHeight: 2, letterSpacing: "0.04em" }}>
+        <div>Dashed border = cage boundary · corner digit = cage sum · <span style={{ color: T.cageLabelHidden }}>?</span> = hidden sum</div>
         <div>Click a cell then type or tap numpad · Arrow keys to move</div>
       </div>
 
@@ -579,36 +781,36 @@ export default function KillerSudoku() {
 
 // ─── SUB-COMPONENTS ───────────────────────────────────────────────────────────
 
-function Label({ children, style }) {
+function Label({ children, T, style }) {
   return (
-    <span style={{ fontSize: 10, color: "#6a5a3a", letterSpacing: "0.2em", minWidth: 52, flexShrink: 0, ...style }}>
+    <span style={{ fontSize: 10, color: T.labelColor, letterSpacing: "0.2em", minWidth: 52, flexShrink: 0, ...style }}>
       {children}
     </span>
   );
 }
 
-function SizeBtn({ active, onClick, disabled, children }) {
+function SizeBtn({ active, onClick, disabled, T, children }) {
   return (
     <button onClick={onClick} disabled={disabled} style={{
       padding: "6px 14px",
-      background: active ? "rgba(255,200,80,0.18)" : "transparent",
-      border: active ? "1px solid rgba(255,200,80,0.55)" : "1px solid rgba(255,200,80,0.12)",
+      background: active ? T.sizeBg : "transparent",
+      border: active ? `1px solid ${T.sizeBorder}` : `1px solid ${T.sizeInactiveBorder}`,
       borderRadius: 7, cursor: disabled ? "not-allowed" : "pointer",
-      color: active ? "#ffc840" : "#5a4e35",
+      color: active ? T.sizeColor : T.sizeInactiveColor,
       fontFamily: "'DM Mono',monospace", fontSize: 12,
       fontWeight: active ? 700 : 400, letterSpacing: "0.05em", transition: "all 0.15s",
     }}>{children}</button>
   );
 }
 
-function DiffBtn({ cfg, active, onClick, disabled, children }) {
+function DiffBtn({ cfg, active, onClick, disabled, T, children }) {
   return (
     <button onClick={onClick} disabled={disabled} style={{
       padding: "7px 4px",
-      background: active ? `${cfg.color}22` : "rgba(255,255,255,0.03)",
-      border: active ? `1px solid ${cfg.color}88` : "1px solid rgba(255,255,255,0.07)",
+      background: active ? `${cfg.color}22` : T.diffBtnInactiveBg,
+      border: active ? `1px solid ${cfg.color}88` : `1px solid ${T.diffBtnInactiveBorder}`,
       borderRadius: 8, cursor: disabled ? "not-allowed" : "pointer",
-      color: active ? cfg.color : "#5a4e35",
+      color: active ? cfg.color : T.diffBtnInactiveColor,
       fontFamily: "'DM Mono',monospace", fontSize: 11,
       fontWeight: active ? 700 : 400, letterSpacing: "0.04em",
       transition: "all 0.15s", textAlign: "center", width: "100%",
@@ -616,7 +818,7 @@ function DiffBtn({ cfg, active, onClick, disabled, children }) {
   );
 }
 
-function DifficultyBar({ diffKey }) {
+function DifficultyBar({ diffKey, T }) {
   const cfg = DIFF_MAP[diffKey];
   const desc = DIFF_DESCS[diffKey];
   const idx = DIFFICULTIES.findIndex(d => d.key === diffKey);
@@ -632,7 +834,7 @@ function DifficultyBar({ diffKey }) {
           <div key={d.key} style={{
             height: 5, borderRadius: 3,
             flex: i <= idx ? 2 : 1,
-            background: i <= idx ? cfg.color : "rgba(255,255,255,0.07)",
+            background: i <= idx ? cfg.color : T.diffPipInactive,
             transition: "all 0.3s",
           }} />
         ))}
@@ -640,7 +842,7 @@ function DifficultyBar({ diffKey }) {
           {cfg.label.toUpperCase()}
         </span>
       </div>
-      <div style={{ fontSize: 11, color: "rgba(240,232,208,0.45)", lineHeight: 1.5 }}>{desc.text}</div>
+      <div style={{ fontSize: 11, color: T.mutedText, lineHeight: 1.5 }}>{desc.text}</div>
       {desc.tags.length > 0 && (
         <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
           {desc.tags.map(tag => (
@@ -656,13 +858,13 @@ function DifficultyBar({ diffKey }) {
   );
 }
 
-function ToolBtn({ active, onClick, color, children }) {
+function ToolBtn({ active, onClick, color, T, children }) {
   return (
     <button onClick={onClick} style={{
       padding: "7px 16px",
       background: active ? `${color}1a` : "transparent",
-      border: `1px solid ${active ? `${color}77` : "rgba(255,255,255,0.07)"}`,
-      borderRadius: 8, color: active ? color : "#5a4e35",
+      border: `1px solid ${active ? `${color}77` : T.toolInactiveBorder}`,
+      borderRadius: 8, color: active ? color : T.toolInactiveColor,
       fontFamily: "'DM Mono',monospace", fontSize: 11,
       fontWeight: 600, cursor: "pointer", letterSpacing: "0.1em", transition: "all 0.15s",
     }}>{children}</button>
