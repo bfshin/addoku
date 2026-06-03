@@ -338,95 +338,6 @@ function buildCages(solution, size, diffKey, noRepeats) {
   return cages;
 }
 
-// ─── UNIQUENESS CHECKER ──────────────────────────────────────────────────────
-//
-// Solves the puzzle from scratch using only the cage constraints (sum, noRepeats)
-// plus standard Sudoku row/col/box rules. Counts solutions up to `limit` (2).
-// Returns 0, 1, or 2 (meaning "2 or more"). Used to reject non-unique puzzles.
-
-function countSolutions(cages, size, noRepeats, limit = 2) {
-  const { br, bc } = boxSize(size);
-
-  // Build per-cell cage lookup: cageOf[r][c] = cage index
-  const cageOf = Array.from({ length: size }, () => Array(size).fill(-1));
-  cages.forEach((cage, i) => cage.cells.forEach(([r, c]) => (cageOf[r][c] = i)));
-
-  // Working grid
-  const grid = makeEmptyGrid(size);
-  let solutions = 0;
-
-  // Precompute cage remaining sums and filled counts for pruning
-  // These are updated incrementally as we place/remove digits.
-  const cageRemSum  = cages.map(cage => cage.hidden ? null : cage.sum); // null = hidden (skip sum check)
-  const cageFilledSum = new Array(cages.length).fill(0);
-  const cageFilledCount = new Array(cages.length).fill(0);
-
-  // Per-cage set of used values (for noRepeats pruning)
-  const cageUsed = cages.map(() => new Set());
-
-  function canPlace(r, c, v) {
-    // Row / col / box uniqueness (standard Sudoku)
-    for (let i = 0; i < size; i++) {
-      if (grid[r][i] === v || grid[i][c] === v) return false;
-    }
-    const br0 = Math.floor(r / br) * br, bc0 = Math.floor(c / bc) * bc;
-    for (let i = br0; i < br0 + br; i++)
-      for (let j = bc0; j < bc0 + bc; j++)
-        if (grid[i][j] === v) return false;
-
-    // Cage constraints
-    const ci = cageOf[r][c];
-    const cage = cages[ci];
-
-    // No-repeats within cage
-    if (noRepeats && cageUsed[ci].has(v)) return false;
-
-    // Sum pruning: if placing v would exceed the cage sum, reject
-    const newFilledSum = cageFilledSum[ci] + v;
-    const newFilledCount = cageFilledCount[ci] + 1;
-    const remaining = cage.cells.length - newFilledCount;
-
-    if (!cage.hidden) {
-      // Filled sum already exceeds target
-      if (newFilledSum > cage.sum) return false;
-      // Even placing minimum values (1) for remaining cells would exceed target
-      if (newFilledSum + remaining > cage.sum) return false;
-      // Can't reach target even placing maximum values for remaining cells
-      if (newFilledSum + remaining * size < cage.sum) return false;
-      // Cage complete: must equal target exactly
-      if (remaining === 0 && newFilledSum !== cage.sum) return false;
-    }
-
-    return true;
-  }
-
-  function bt(pos) {
-    if (solutions >= limit) return; // early exit
-    if (pos === size * size) {
-      solutions++;
-      return;
-    }
-    const r = Math.floor(pos / size), c = pos % size;
-    for (let v = 1; v <= size; v++) {
-      if (canPlace(r, c, v)) {
-        const ci = cageOf[r][c];
-        grid[r][c] = v;
-        cageFilledSum[ci] += v;
-        cageFilledCount[ci]++;
-        if (noRepeats) cageUsed[ci].add(v);
-        bt(pos + 1);
-        grid[r][c] = 0;
-        cageFilledSum[ci] -= v;
-        cageFilledCount[ci]--;
-        if (noRepeats) cageUsed[ci].delete(v);
-      }
-    }
-  }
-
-  bt(0);
-  return solutions;
-}
-
 function computeCageBorders(cages, size) {
   const cc = Array.from({ length: size }, () => Array(size).fill(-1));
   cages.forEach((cage, i) => cage.cells.forEach(([r, c]) => (cc[r][c] = i)));
@@ -512,18 +423,9 @@ export default function KillerSudoku() {
     setTimer(0); setTimerActive(false); setPuzzle(NULL_PUZZLE);
     setTimeout(() => {
       if (genTokenRef.current !== token) return;
-      // Keep regenerating cages until the puzzle has exactly one solution.
-      // A fresh solution grid is generated each outer iteration to avoid bias.
-      let solution, cages;
-      let attempts = 0;
-      do {
-        solution = generateSolution(sz);
-        cages    = buildCages(solution, sz, diff, nr);
-        attempts++;
-        // Safety valve: give up after 40 attempts (should be rare)
-        if (attempts >= 40) break;
-      } while (countSolutions(cages, sz, nr) !== 1);
-      const borders = computeCageBorders(cages, sz);
+      const solution = generateSolution(sz);
+      const cages    = buildCages(solution, sz, diff, nr);
+      const borders  = computeCageBorders(cages, sz);
       setPuzzle({ size: sz, solution, cages, borders, grid: makeEmptyGrid(sz) });
       setGenerating(false); setTimerActive(true);
     }, 30);
